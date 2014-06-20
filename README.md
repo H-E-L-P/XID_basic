@@ -34,30 +34,30 @@ Various examples have been run
 * eg6: a 200X200 image with 600 sources and noise increasing from the centre
 
 The data files are:
-'#.data'     : simulated detector signal       (Alt. Input to ConjGrad code)
+-'#.data'     : simulated detector signal       (Alt. Input to ConjGrad code)
 	    : recorded as a vector
-'#.matrix'    : source-signal transfer matrix   (Input to ConjGrad code)
+-'#.matrix'    : source-signal transfer matrix   (Input to ConjGrad code)
 	    : recorded as a sparse matrix
-'#.noisydata' : simulated noisy data            (Input to ConjGrad code)
+-'#.noisydata' : simulated noisy data            (Input to ConjGrad code)
 	    : recorded as a vector
-'#.sigma'     : sqrt(variance) vector           (Input to ConjGrad code)
+-'#.sigma'     : sqrt(variance) vector           (Input to ConjGrad code)
 	    : recorded as a vector
-'#.src'        : simulated input source flux     (for c.f. ConjGrad results)
+-'#.src'        : simulated input source flux     (for c.f. ConjGrad results)
 	    : recorded as a vector
 
 'DATA = MATRIX # SOURCE'
 
 The fits files are
-'#_map.fits'        : simulated map with WCS
-'#_noisymap.fits'   : simulated noisy map
-'#_sigmap.fits'     : sqrt(variance) map
-'#_src.fits'        : sources in binary fits catalogue with RA, Dec
-'#_out.fits'	  : sources and fit fluxes in bin fits catalogue (produced by compare.pro)
+-'#_map.fits'        : simulated map with WCS
+-'#_noisymap.fits'   : simulated noisy map
+-'#_sigmap.fits'     : sqrt(variance) map
+-'#_src.fits'        : sources in binary fits catalogue with RA, Dec
+-'#_out.fits'	  : sources and fit fluxes in bin fits catalogue (produced by compare.pro)
 
 
 Also
-svd_out.g3 outputs from early Matlab runs using SVD
-svd_out.g4 
+-svd_out.g3 outputs from early Matlab runs using SVD
+-svd_out.g4 
 
 
 Documentation
