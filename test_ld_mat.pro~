@@ -1,0 +1,2 @@
+x_pix = findgen(100)
+y_pix = findgen(100)

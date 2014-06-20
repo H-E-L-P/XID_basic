@@ -1,0 +1,179 @@
+PRO hermes_sim_map, srcs, map, hdr, prf,  noise=noise, perfect_map=perfect_map, sig_map=sig_map, seed=seed, osamp=osamp
+
+;+
+; Name:
+;  HERMES_SIM_MAP
+;
+;
+; PURPOSE:
+;  Takes an input list of sources and places them into a map with a given psf and noise
+;
+;
+; CATEGORY:
+;
+;
+;
+; CALLING SEQUENCE:
+;
+;
+;
+; INPUTS:
+;      SRCS: Structure with 
+;            SRCS.ra: ra of sources
+;            SRCS.dec: dec of sources
+;            SRCS.f: flux
+;      HDR:  Fits header containing WCS and map dimensions
+;      PRF:  PRF to be used for injected sources
+;      PAXIS1: Size of smoothing PSF kernel in pixels (Default 
+;              NOISE: Noise value (or image), sigma in units of 
+;                     error in the final point-source flux estimate. 
+;                     Various possible input forms
+;      SEED: Random number seed (Default -1)
+;      OSAMP: Oversampling rate of input PRF (default=1)
+;
+;
+; OPTIONAL INPUTS:
+;
+;
+;
+; KEYWORD PARAMETERS:
+;
+;
+;
+; OUTPUTS:
+;      MAP: NOISY MAP in units of flux per pixel
+;      PERFECT_MAP: No noise map
+;                   SIG_MAP: Noise in the form of a map in units 
+;                            of flux per pixel (N.B. not per point
+;                            source as the noise is input!)
+;      
+;
+; OPTIONAL OUTPUTS:
+;
+;
+;
+; COMMON BLOCKS:
+;
+;
+;
+; SIDE EFFECTS:
+;
+;
+;
+; RESTRICTIONS:
+;    Slightly clunky inputs due to history in list-driven photometry routine 
+;    should be streamlined e.g. to take a fits header as input and any arbitrary psf
+;    also should pull the random source generation stuff out
+;
+; PROCEDURE:
+;
+;
+;
+; EXAMPLE:
+;
+;
+;
+; MODIFICATION HISTORY:
+;
+;-
+
+;   print,'noise:',noise
+;----------------------------------------------------------------------
+; parameter checking & defaults
+;----------------------------------------------------------------------
+
+
+; PRF parameters
+IF NOT keyword_set(prf) THEN message, 'must supply input PRF'
+
+
+IF NOT keyword_set(seed) THEN seed = -1
+IF NOT keyword_set(osamp) THEN osamp = 1
+
+adxy,hdr,srcs.ra,srcs.dec,x_src,y_src
+f_src = srcs.f
+naxis1=sxpar(hdr,'naxis1')
+naxis2=sxpar(hdr,'naxis2')
+n_pix = long(naxis1)*long(naxis2)
+make_2d, findgen(naxis1), findgen(naxis2), x_pix, y_pix
+n_src=n_elements(x_src)
+;----------------------------------------------------------------------
+; map
+;----------------------------------------------------------------------
+
+
+
+map = fltarr(naxis1, naxis2)
+
+
+;----------------------------------------------------------------------
+; putting sources in "zero-footprint" map
+;----------------------------------------------------------------------
+
+
+
+
+prf2_norm = total(prf^2)
+
+;----------------------------------------------------------------------
+; Convolution of PRF with zero-footprint map, do this so that objects 
+;----------------------------------------------------------------------
+PRFmap=fltarr(n_pix)
+paxis1=(size(prf))[1]/osamp
+paxis2=(size(prf))[2]/osamp
+for i=0L,n_src-1 do begin
+
+dx = -round(x_src[i])+(paxis1-1)/2.+x_pix
+dy = -round(y_src[i])+(paxis2-1)/2.+y_pix
+pindx=(findgen(paxis1)-x_src[i]+round(x_src[i]))*osamp+osamp-1
+pindy=(findgen(paxis2)-y_src[i]+round(y_src[i]))*osamp+osamp-1
+; convolve with PRF
+good = where(dx GE 0 AND dx LT paxis1 AND dy GE 0 AND dy LT paxis2, ngood, comp=bad, ncomp=nbad)
+if(ngood ne 0) then begin
+nprf=(bilinear(prf,pindx,pindy,missing=0))
+PRFmap[good]=PRFmap[good]+nprf[dx[good],dy[good]]*f_src[i]
+endif
+stop
+endfor
+map=reform(PRFmap,naxis1,naxis2)
+
+;map = convol(map, prf, /edge_zero)
+
+;----------------------------------------------------------------------
+; adding noise to map
+;----------------------------------------------------------------------
+
+perfect_map = map
+IF NOT keyword_set(noise) THEN noise = 0.
+; assume noise is constant for now
+sz = size(noise)
+CASE  sz[0] OF  
+  0: sig_map = replicate(noise, naxis1, naxis2)
+  1: BEGIN
+     IF sz[1] EQ 1 THEN sig_map = replicate(noise[0], naxis1, naxis2) ELSE message, 'Dont know how to use vector'
+  END 
+  2: BEGIN
+     IF sz[1] NE naxis1 OR sz[2] NE naxis2 THEN message, 'Noise image wrong size'
+     sig_map = noise
+  END 
+  ELSE: message, 'Dont know how to use noise array of '+sz[0]+'dimensions'
+END
+
+; scaling from flux error antifipacted for the point source in the optimally
+; averaged data to error in each pixel.
+
+;sig_map = sig_map*sqrt(prf2_norm)
+
+; generating realisation of the noise
+
+noisy_map = reform(randomn(seed, n_pix), naxis1, naxis2)*sig_map
+
+if(max(noisy_map) gt 0.) then print,"Adding noise...."+string(mean(sig_map(0)))
+
+
+; adding noise to map
+noisy_map = noisy_map+map
+
+map = noisy_map
+
+END
