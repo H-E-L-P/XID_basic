@@ -22,7 +22,7 @@ lstdrv_wrapper,400,400,600,3,9,'eg4'
 naxis1 = 400
 naxis2 = 400
  dist_circle,sig,[naxis1,naxis2]      
-sig = sig/50.+1)
+sig = sig/50.+1
 lstdrv_wrapper,naxis1, naxis2,100,3,9,'eg5',noise=sig
 
 naxis1 = 200

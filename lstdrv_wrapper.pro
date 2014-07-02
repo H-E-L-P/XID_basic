@@ -1,4 +1,4 @@
-PRO lstdrv_wrapper, naxis1, naxis2, n_src, fwhm, paxis1, name, srcs=srcs, noise=noise
+PRO lstdrv_wrapper, naxis1, naxis2, n_src, fwhm, paxis1, name, srcs=srcs, noise=noise, debug=debug
 
 ;----------------------------------------------------------------------
 ; Source structure
@@ -43,8 +43,8 @@ IF NOT keyword_set(ra) THEN ra = 53.1267
 IF NOT keyword_set(dec) THEN dec =  -27.805
 IF NOT keyword_set(roll) THEN roll = 0
 icmkhdr, naxis1, naxis2, cdelt, cdelt,ra, dec, roll, hd
-
-simple_sim_map, srcs, noisy_map, naxis1, naxis2, fwhm, paxis1=paxis1, noise=noise, prf=prf, perfect=map, sig_map=sig_map, seed=seed
+;pdh21: changed prf keyowrd to prf_out to match, added prf_norm as it required variable to be set, added pix_noise as it required variable to be set
+simple_sim_map, srcs, noisy_map, naxis1, naxis2, fwhm, paxis1=paxis1, noise=noise, prf_out=prf, perfect=map, sig_map=sig_map, seed=seed,prf_norm=0,pix_noise=0
 
 ;----------------------------------------------------------------------
 ; stripped background
@@ -128,7 +128,7 @@ IF nbad GT 0 THEN BEGIN
 ENDIF
 
 
-IF keyword_set(!debug) THEN BEGIN 
+IF keyword_set(debug) THEN BEGIN 
    window, 1
    icplot, map
    window, 2
@@ -183,7 +183,8 @@ make_2d, lindgen(n_pix), lindgen(n_src), px, py
 good = where(PRF_matrix NE 0, ngood)
 FOR k=0L, ngood-1L DO printf, unit, px[good[k]], py[good[k]], PRF_matrix[good[k]]
 free_lun, unit
-
+;files now also saved as idl save files
+save,map,noisy_map,n_pix,sig_map,filename=name+'.sav'
 
 ;----------------------------------------------------------------------
 ; writing out catalogue and map data in fits for astronomy routines
